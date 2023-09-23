@@ -1,0 +1,64 @@
+---
+---
+
+<h2>Podcasts</h2>
+<div class="artist-info" id="EpisodeInfo"></div>
+
+
+<script is:inline>
+    // Array de IDs de episodios
+    const EpisodesIds = [
+        '59hn8iZSQLztLp3cFp2ykM',
+        '2wnOBwp6zC4az25sz9nJpe'
+    ];
+
+
+    // Función para obtener información de un episodio dado su ID
+    function getEpisodeInfo(episodeId, accessToken) {
+        const EpisodeApiUrl = `https://api.spotify.com/v1/shows/${episodeId}`;
+
+        return fetch(EpisodeApiUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + accessToken,
+            },
+        })
+        .then(response => response.json());
+    }
+
+    // Obtener token de acceso
+    fetch(authUrl, authOptions)
+    .then(response => response.json())
+    .then(data => {
+        const accessToken = data.access_token;
+
+        // Iterar sobre los IDs de episodios y obtener información de cada uno
+        const promises = EpisodesIds.map(episodeId => {
+            return getEpisodeInfo(episodeId, accessToken);
+        });
+
+        Promise.all(promises)
+        .then(EpisodesDataArray => {
+            // EpisodesDataArray contiene la información de todos los episodios
+            console.log(EpisodesDataArray);
+
+            // Mostrar la información de los episodios en la página
+            const episodeInfoDiv = document.getElementById('EpisodeInfo');
+            EpisodesDataArray.forEach(episodeData => {
+                episodeInfoDiv.innerHTML += `
+                    <div class="main-block episode">
+                        <img src="${episodeData.images[0].url}" alt="${episodeData.name}"/>
+                        <h4>${episodeData.name}</h4>
+                        <p>Creado por ${episodeData.show.name}</p>
+                    </div>
+                `;
+            });
+        })
+        .catch(error => {
+            console.error('Error al obtener información de los episodios:', error);
+        });
+    })
+    .catch(error => {
+        console.error('Error al obtener el token de acceso:', error);
+    });
+</script>

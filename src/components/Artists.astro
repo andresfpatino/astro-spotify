@@ -1,0 +1,148 @@
+---
+interface Props {
+	title?: string;
+	body?: string;
+	href?: string;
+}
+
+const { href, title, body } = Astro.props;
+---
+
+<!-- <li class="link-card">
+	<a href={href}>
+		<h2>
+			{title}
+			<span>&rarr;</span>
+		</h2>
+		<p>
+			{body}
+		</p>
+	</a>
+</li> -->
+
+<h2>Artists</h2>
+<div class="artist-info" id="artist-info"> </div>
+<div id="artist-tracks"></div>
+
+<script is:inline>
+
+	// // Configura tu Client ID y Client Secret
+	// const clientId = '66bd39c675344b37ac1d915db7beaac9';
+	// const clientSecret = '66de924ebb8b453cb389a1dc3a49fa6a';
+
+	// // Codifica las credenciales en Base64
+	// const base64Credentials = btoa(clientId + ':' + clientSecret);
+
+	// // Configura las opciones para la solicitud de token
+	// const authUrl = 'https://accounts.spotify.com/api/token';
+	// const authData = 'grant_type=client_credentials';
+
+	// const authOptions = {
+	// 	method: 'POST',
+	// 	headers: {
+	// 		'Authorization': 'Basic ' + base64Credentials,
+	// 		'Content-Type': 'application/x-www-form-urlencoded',
+	// 	},
+	// 	body: authData,
+	// };
+
+	// Array de IDs de artistas
+	const artistIds = [
+		'4SsVbpTthjScTS7U2hmr1X',
+		'0UWZUmn7sybxMCqrw9tGa7',
+		'53XhwfbYqKCa1cC15pYq2q',
+		'3qm84nBOXUEQ2vnTfUTTFC',
+		'4uqzzJg3ww5eH7IgGV7DMT',
+		'7An4yvF7hDYDolN4m5zKBp',
+		'4jogXSSvlyMkODGSZ2wc2P',
+		'2oXKVuZqDv85M1ynjVMp3J',
+		'5NGO30tJxFlKixkPSgXcFE',
+		'0GutRVONcyyBj1WduodFc6'
+	];
+
+	// Función para obtener información de un artista dado su ID
+	function getArtistInfo(artistId, accessToken) {
+		const artistApiUrl = `https://api.spotify.com/v1/artists/${artistId}`;
+
+		return fetch(artistApiUrl, {
+			method: 'GET',
+			headers: {
+				'Authorization': 'Bearer ' + accessToken,
+			},
+		})
+		.then(response => response.json());
+	}
+
+	// Función para obtener las mejores canciones de un artista dado su ID
+	function getTopTracks(artistId, accessToken) {
+		const artistTopTracksUrl = `https://api.spotify.com/v1/artists/${artistId}/top-tracks?country=US`;
+
+		return fetch(artistTopTracksUrl, {
+			method: 'GET',
+			headers: {
+				'Authorization': 'Bearer ' + accessToken,
+			},
+		})
+		.then(response => response.json());
+	}
+
+	// Obtener token de acceso
+	fetch(authUrl, authOptions)
+	.then(response => response.json())
+	.then(data => {
+		const accessToken = data.access_token;
+
+		// Iterar sobre los IDs de artistas y obtener información de cada uno
+		const promises = artistIds.map(artistId => {
+			const artistInfoPromise = getArtistInfo(artistId, accessToken);
+			const topTracksPromise = getTopTracks(artistId, accessToken);
+
+			return Promise.all([artistInfoPromise, topTracksPromise]);
+		});
+
+		Promise.all(promises)
+		.then(artistDataArray => {
+			// artistDataArray contiene la información de todos los artistas
+			console.log(artistDataArray);
+
+			// Mostrar la información de los artistas en la página
+			const artistInfoDiv = document.getElementById('artist-info');
+			artistDataArray.forEach(([artistData, topTracksData]) => {
+				artistInfoDiv.innerHTML += `
+					<div class="main-block track">
+						<img src="${artistData.images[0].url}" alt="${artistData.name}"/>
+						<h4>${artistData.name}</h4>
+						<p>${artistData.genres.join(', ')}</p>
+					</div>
+				`;
+
+				// Mostrar las mejores canciones del artista
+				// const tracksListDiv = document.getElementById('artist-tracks');
+				// tracksListDiv.innerHTML += '<h2>Mejores canciones:</h2><ul>';
+
+				// topTracksData.tracks.forEach(track => {
+				// 	// Crear un elemento de lista para cada canción
+				// 	const trackListItem = document.createElement('li');
+				// 	trackListItem.classList.add('episode');
+				// 	trackListItem.setAttribute('data-spotify-id', track.uri);
+				// 	trackListItem.textContent = track.name;
+
+				// 	// Agregar el elemento de lista a la lista de canciones
+				// 	tracksListDiv.appendChild(trackListItem);
+				// });
+
+				// tracksListDiv.innerHTML += '</ul>';
+			});
+		})
+		.catch(error => {
+			console.error('Error al obtener información de los artistas:', error);
+		});
+	})
+	.catch(error => {
+		console.error('Error al obtener el token de acceso:', error);
+	});
+
+
+
+
+</script>

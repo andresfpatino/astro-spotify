@@ -1,0 +1,90 @@
+---
+---
+
+<h2>Spotify Playlists</h2>
+
+<div class="artist-info" id="playlistInfo"></div>
+
+<script is:inline>
+
+    // Configura tu Client ID y Client Secret
+    const clientId = '66bd39c675344b37ac1d915db7beaac9';
+    const clientSecret = '66de924ebb8b453cb389a1dc3a49fa6a';
+
+    // Codifica las credenciales en Base64
+    const base64Credentials = btoa(clientId + ':' + clientSecret);
+
+    // Configura las opciones para la solicitud de token
+    const authUrl = 'https://accounts.spotify.com/api/token';
+    const authData = 'grant_type=client_credentials';
+
+    const authOptions = {
+    method: 'POST',
+    headers: {
+        'Authorization': 'Basic ' + base64Credentials,
+        'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: authData,
+    };
+
+    // Array de IDs de playlists
+    const playlistIds = [
+    '37i9dQZF1DXcBWIGoYBM5M',
+    '37i9dQZF1DX0XUsuxWHRQd',
+    '37i9dQZF1DWXRqgorJj26U',
+    '37i9dQZF1DX10zKzsJ2jva',
+    '37i9dQZF1DX4WYpdgoIcn6'
+    ];
+
+    // Función para obtener información de una playlist dado su ID
+    function getPlaylistInfo(playlistId, accessToken) {
+    const playlistApiUrl = `https://api.spotify.com/v1/playlists/${playlistId}`;
+
+    return fetch(playlistApiUrl, {
+        method: 'GET',
+        headers: {
+        'Authorization': 'Bearer ' + accessToken,
+        },
+    })
+    .then(response => response.json());
+    }
+
+    // Obtener token de acceso
+    fetch(authUrl, authOptions)
+    .then(response => response.json())
+    .then(data => {
+    const accessToken = data.access_token;
+
+    // Iterar sobre los IDs de playlists y obtener información de cada una
+    const promises = playlistIds.map(playlistId => {
+        return getPlaylistInfo(playlistId, accessToken);
+    });
+
+    Promise.all(promises)
+    .then(playlistDataArray => {
+        // playlistDataArray contiene la información de todas las playlists
+        console.log(playlistDataArray);
+
+        // Mostrar la información de las playlists en la página
+        const playlistInfoDiv = document.getElementById('playlistInfo');
+        playlistDataArray.forEach(playlistData => {
+        playlistInfoDiv.innerHTML += `
+            <div class="main-block playlist">
+            <img src="${playlistData.images[0].url}" alt="${playlistData.name}"/>
+            <h4>${playlistData.name}</h4>
+            <p>Creada por ${playlistData.owner.display_name}</p>
+            </div>
+        `;
+        });
+    })
+    .catch(error => {
+        console.error('Error al obtener información de las playlists:', error);
+    });
+    })
+    .catch(error => {
+    console.error('Error al obtener el token de acceso:', error);
+    });
+
+
+
+</script>
